@@ -1,0 +1,380 @@
+# Pruebas E2E con Selenium, Postman y Newman - Spring Boot
+
+## Autor
+
+- **Nombre:** Jhoseth Esneider Rozo Carrillo
+- **Código:** 02230131027
+- **Programa:** Ingeniería de Sistemas
+- **Unidad:** 10 - Pruebas de Software en Aplicaciones Web
+- **Actividad:** Post-Contenido 2
+- **Fecha:** 10/05/2026
+
+---
+
+## Descripción del Proyecto
+
+Este proyecto extiende el Post-Contenido 1 de la Unidad 10 implementando pruebas de extremo a extremo (E2E) y pruebas automatizadas de API para una aplicación ToDo desarrollada con Spring Boot.
+
+Se implementaron pruebas automatizadas con Selenium WebDriver utilizando el patrón Page Object Model (POM), una colección de pruebas REST en Postman y automatización continua mediante Newman ejecutado desde GitHub Actions.
+
+---
+
+## Funcionalidades Implementadas
+
+- Pruebas E2E con Selenium WebDriver.
+- Implementación del patrón Page Object Model (POM).
+- Ejecución de Chrome en modo headless.
+- Colección Postman con pruebas REST automatizadas.
+- Variables dinámicas usando `pm.collectionVariables`.
+- Automatización de pruebas API con Newman.
+- Pipeline CI/CD con GitHub Actions.
+- Workflow automático ejecutando pruebas Newman en cada push.
+
+---
+
+## Tecnologías Utilizadas
+
+- **Spring Boot 3.x** — Framework principal.
+- **Java 17** — Lenguaje de programación.
+- **Maven 3.x** — Gestión de dependencias.
+- **JUnit 5** — Framework de pruebas.
+- **Selenium WebDriver 4.18.1** — Automatización E2E.
+- **WebDriverManager 5.8.0** — Gestión automática de drivers.
+- **Google Chrome** — Navegador utilizado para pruebas.
+- **Postman v10+** — Pruebas de API REST.
+- **Newman** — Runner CLI para Postman.
+- **GitHub Actions** — Integración continua.
+- **Node.js 18+** — Ejecución de Newman.
+
+---
+
+## Estructura del Proyecto
+
+```text
+rozo-post2-u10/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/com/universidad/tareas_testing/
+│   │   └── resources/
+│   │
+│   └── test/
+│       └── java/com/universidad/tareas_testing/e2e/
+│           ├── TareasPage.java
+│           ├── NuevaTareaPage.java
+│           └── TareasE2ETest.java
+│
+├── postman/
+│   ├── ColeccionToDo.json
+│   ├── env-local.json
+│   └── env-ci.json
+│
+├── .github/
+│   └── workflows/
+│       └── api-tests.yml
+│
+├── evidencias/
+│
+├── pom.xml
+└── README.md
+```
+
+---
+
+# CHECKPOINT 1 - Selenium + Page Object Model
+
+---
+
+## Implementación del Patrón POM
+
+Se creó el siguiente paquete:
+
+```text
+src/test/java/com/universidad/tareas_testing/e2e
+```
+
+Con las siguientes clases:
+
+- `TareasPage`
+- `NuevaTareaPage`
+- `TareasE2ETest`
+
+---
+
+## Clase `TareasPage`
+
+```java
+public class TareasPage {
+
+    private final WebDriver driver;
+
+    private final By btnNueva = By.id("btn-nueva");
+    private final By listItems = By.cssSelector(".tarea-item");
+
+    public TareasPage(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    public int contarTareas() {
+        return driver.findElements(listItems).size();
+    }
+
+    public NuevaTareaPage irANuevaTarea() {
+        driver.findElement(btnNueva).click();
+        return new NuevaTareaPage(driver);
+    }
+}
+```
+
+---
+
+## Clase de Pruebas Selenium
+
+```java
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+class TareasE2ETest {
+
+    private WebDriver driver;
+
+    @BeforeEach
+    void setUp() {
+
+        WebDriverManager.chromedriver().setup();
+
+        ChromeOptions opts = new ChromeOptions();
+        opts.addArguments("--headless", "--no-sandbox");
+
+        driver = new ChromeDriver(opts);
+
+        driver.get("http://localhost:8080/tareas");
+    }
+
+    @Test
+    void paginaTareas_cargaCorrectamente() {
+        assertThat(driver.getTitle()).contains("Tareas");
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
+```
+
+---
+
+## Ejecutar Pruebas Selenium
+
+Abrir PowerShell en la carpeta del proyecto:
+
+```powershell
+cd C:\Users\Public\Dev\rozo-post2-u10
+```
+
+Ejecutar:
+
+```powershell
+.\mvnw.cmd test -Dtest=TareasE2ETest
+```
+
+---
+
+## Resultado Esperado
+
+```text
+BUILD SUCCESS
+Tests run: 2
+Failures: 0
+Errors: 0
+```
+
+---
+
+# CHECKPOINT 2 - Postman + Test Scripts
+
+---
+
+## Crear Entorno en Postman
+
+### Nombre del entorno
+
+```text
+ToDoApp-Local
+```
+
+### Variable
+
+```text
+baseUrl = http://localhost:8080
+```
+
+---
+
+## Colección Postman
+
+### Nombre
+
+```text
+API ToDoApp
+```
+
+---
+
+## Requests Implementados
+
+- POST crear tarea
+- GET obtener tarea
+- PATCH completar tarea
+- GET verificar completada
+- GET tarea inexistente (404)
+
+---
+
+## Test Script - POST Crear Tarea
+
+```javascript
+pm.test("Status 201 Created", () => {
+  pm.response.to.have.status(201);
+});
+
+pm.test("Respuesta contiene id numerico", () => {
+  const b = pm.response.json();
+
+  pm.expect(b).to.have.property("id");
+
+  pm.collectionVariables.set("tareaId", b.id);
+});
+
+pm.test("Tiempo de respuesta < 500ms", () => {
+  pm.expect(pm.response.responseTime).to.be.below(500);
+});
+```
+
+---
+
+## Ejecutar Aplicación Spring Boot
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Esperar el mensaje:
+
+```text
+Started Application
+```
+
+---
+
+## Ejecutar Runner de Postman
+
+1. Abrir la colección **API ToDoApp**.
+2. Hacer clic en **Run Collection**.
+3. Seleccionar el entorno **ToDoApp-Local**.
+4. Ejecutar **Start Run**.
+
+---
+
+## Resultado Esperado
+
+```text
+0 failures
+5 requests ejecutados correctamente
+```
+
+---
+
+# CHECKPOINT 3 - Newman + GitHub Actions
+
+---
+
+## Instalación de Newman
+
+Instalar Node.js 18+ y luego ejecutar:
+
+```powershell
+npm install -g newman
+```
+
+Verificar instalación:
+
+```powershell
+newman -v
+```
+
+---
+
+## Ejecutar Newman Localmente
+
+Desde la carpeta del proyecto ejecutar:
+
+```powershell
+newman run postman/ColeccionToDo.json --environment postman/env-local.json
+```
+
+---
+
+## Resultado Esperado
+
+```text
+5 requests
+0 failures
+```
+
+---
+
+## Workflow GitHub Actions
+
+Archivo utilizado:
+
+```text
+.github/workflows/api-tests.yml
+```
+
+---
+
+# Instrucciones Generales de Ejecución
+
+---
+
+## 1. Ejecutar Aplicación
+
+```powershell
+cd C:\Users\Public\Dev\rozo-post2-u10
+
+.\mvnw.cmd spring-boot:run
+```
+
+---
+
+## 2. Ejecutar Pruebas Selenium
+
+```powershell
+.\mvnw.cmd test -Dtest=TareasE2ETest
+```
+
+---
+
+## 3. Ejecutar Newman
+
+```powershell
+newman run postman/ColeccionToDo.json --environment postman/env-local.json
+```
+
+## Capturas del Proyecto
+
+Las siguientes capturas se encuentran en la carpeta `/evidencias/`:
+
+# Test E2E pasados
+
+![testE2E](evidencias/captura_testE2E.png)
+
+## 5 test pasados con postman
+
+![postman_test](evidencias/captura_postman_test_success.png)
+
+## Test comprobado en Actions del repositorio
+
+![actions](evidencias/captura_actions_passing.png)

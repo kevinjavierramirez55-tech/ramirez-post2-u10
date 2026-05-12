@@ -1,0 +1,14 @@
+{
+  "id": "66e045ac-a453-430b-9276-d54b3bd9f3b6",
+  "name": "ToDoApp-CI",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_using": "Postman/10"
+}
