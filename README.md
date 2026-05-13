@@ -1,298 +1,145 @@
-# Pruebas E2E con Selenium, Postman y Newman - Spring Boot
+# Programación Web - Unidad 10
+
+## Post-Contenido 2 - Pruebas E2E con Selenium, Postman y Newman
 
 ## Autor
 
-- **Nombre:** Jhoseth Esneider Rozo Carrillo
-- **Código:** 02230131027
-- **Programa:** Ingeniería de Sistemas
-- **Unidad:** 10 - Pruebas de Software en Aplicaciones Web
-- **Actividad:** Post-Contenido 2
-- **Fecha:** 10/05/2026
+- Nombre: Kevin Javier Ramirez
+- Programa: Ingeniería de Sistemas
+- Asignatura: Programación Web
+- Unidad: 10 - Pruebas de Software en Aplicaciones Web
+- Actividad: Post-Contenido 2
+- Fecha: 2026
 
 ---
 
-## Descripción del Proyecto
+## Objetivo
 
-Este proyecto extiende el Post-Contenido 1 de la Unidad 10 implementando pruebas de extremo a extremo (E2E) y pruebas automatizadas de API para una aplicación ToDo desarrollada con Spring Boot.
-
-Se implementaron pruebas automatizadas con Selenium WebDriver utilizando el patrón Page Object Model (POM), una colección de pruebas REST en Postman y automatización continua mediante Newman ejecutado desde GitHub Actions.
+Este proyecto implementa pruebas de extremo a extremo (E2E) sobre una aplicación
+Spring Boot de gestión de tareas aplicando Selenium WebDriver con el patrón
+Page Object Model, pruebas de API REST en Postman y automatización de ejecución
+mediante Newman integrado con GitHub Actions.
 
 ---
 
-## Funcionalidades Implementadas
+## Tecnologías
 
-- Pruebas E2E con Selenium WebDriver.
-- Implementación del patrón Page Object Model (POM).
-- Ejecución de Chrome en modo headless.
-- Colección Postman con pruebas REST automatizadas.
+- Java 17
+- Spring Boot 3.2.x
+- Maven 3.9.x
+- Selenium WebDriver 4.18.1
+- WebDriverManager 5.8.0
+- JUnit 5
+- Postman
+- Newman
+- GitHub Actions
+- Google Chrome
+- H2 Database
+
+---
+
+## Arquitectura implementada
+
+```text
+src/
+├── main/
+│   └── java/com/empresa/todo/
+│       ├── controller/
+│       ├── service/
+│       ├── repository/
+│       └── entity/
+│
+└── test/
+    └── java/com/empresa/todo/
+        └── e2e/
+            ├── TareasPage.java
+            ├── NuevaTareaPage.java
+            └── TareasE2ETest.java
+
+postman/
+├── ColeccionToDo.json
+├── env-local.json
+└── env-ci.json
+
+.github/
+└── workflows/
+    └── api-tests.yml
+```
+
+---
+
+## Componentes implementados
+
+### Selenium WebDriver
+
+- Implementación de pruebas E2E usando Selenium.
+- Uso del patrón Page Object Model.
+- Encapsulamiento de selectores con constantes `By`.
+- Ejecución en modo headless con Google Chrome.
+
+### Postman
+
+- Colección "API ToDoApp" con 5 requests.
 - Variables dinámicas usando `pm.collectionVariables`.
-- Automatización de pruebas API con Newman.
-- Pipeline CI/CD con GitHub Actions.
-- Workflow automático ejecutando pruebas Newman en cada push.
+- Test scripts para validar:
+  - status code
+  - body response
+  - tiempos de respuesta
+  - almacenamiento de IDs
+
+### Newman
+
+- Ejecución automatizada de la colección Postman.
+- Integración en GitHub Actions.
+- Pipeline automático en push y pull_request.
 
 ---
 
-## Tecnologías Utilizadas
+## Dependencias Maven
 
-- **Spring Boot 3.x** — Framework principal.
-- **Java 17** — Lenguaje de programación.
-- **Maven 3.x** — Gestión de dependencias.
-- **JUnit 5** — Framework de pruebas.
-- **Selenium WebDriver 4.18.1** — Automatización E2E.
-- **WebDriverManager 5.8.0** — Gestión automática de drivers.
-- **Google Chrome** — Navegador utilizado para pruebas.
-- **Postman v10+** — Pruebas de API REST.
-- **Newman** — Runner CLI para Postman.
-- **GitHub Actions** — Integración continua.
-- **Node.js 18+** — Ejecución de Newman.
+Agregar en `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>org.seleniumhq.selenium</groupId>
+    <artifactId>selenium-java</artifactId>
+    <version>4.18.1</version>
+    <scope>test</scope>
+</dependency>
+
+<dependency>
+    <groupId>io.github.bonigarcia</groupId>
+    <artifactId>webdrivermanager</artifactId>
+    <version>5.8.0</version>
+    <scope>test</scope>
+</dependency>
+```
 
 ---
 
-## Estructura del Proyecto
+## Estructura E2E con Page Object Model
 
 ```text
-rozo-post2-u10/
+TareasPage
 │
-├── src/
-│   ├── main/
-│   │   ├── java/com/universidad/tareas_testing/
-│   │   └── resources/
-│   │
-│   └── test/
-│       └── java/com/universidad/tareas_testing/e2e/
-│           ├── TareasPage.java
-│           ├── NuevaTareaPage.java
-│           └── TareasE2ETest.java
+├── btnNueva
+├── listItems
+├── contarTareas()
+└── irANuevaTarea()
+
+NuevaTareaPage
 │
-├── postman/
-│   ├── ColeccionToDo.json
-│   ├── env-local.json
-│   └── env-ci.json
-│
-├── .github/
-│   └── workflows/
-│       └── api-tests.yml
-│
-├── evidencias/
-│
-├── pom.xml
-└── README.md
+├── txtTitulo
+├── txtDescripcion
+├── btnGuardar
+└── crearTarea()
 ```
 
 ---
 
-# CHECKPOINT 1 - Selenium + Page Object Model
+## Configuración de Newman
 
----
-
-## Implementación del Patrón POM
-
-Se creó el siguiente paquete:
-
-```text
-src/test/java/com/universidad/tareas_testing/e2e
-```
-
-Con las siguientes clases:
-
-- `TareasPage`
-- `NuevaTareaPage`
-- `TareasE2ETest`
-
----
-
-## Clase `TareasPage`
-
-```java
-public class TareasPage {
-
-    private final WebDriver driver;
-
-    private final By btnNueva = By.id("btn-nueva");
-    private final By listItems = By.cssSelector(".tarea-item");
-
-    public TareasPage(WebDriver driver) {
-        this.driver = driver;
-    }
-
-    public int contarTareas() {
-        return driver.findElements(listItems).size();
-    }
-
-    public NuevaTareaPage irANuevaTarea() {
-        driver.findElement(btnNueva).click();
-        return new NuevaTareaPage(driver);
-    }
-}
-```
-
----
-
-## Clase de Pruebas Selenium
-
-```java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-class TareasE2ETest {
-
-    private WebDriver driver;
-
-    @BeforeEach
-    void setUp() {
-
-        WebDriverManager.chromedriver().setup();
-
-        ChromeOptions opts = new ChromeOptions();
-        opts.addArguments("--headless", "--no-sandbox");
-
-        driver = new ChromeDriver(opts);
-
-        driver.get("http://localhost:8080/tareas");
-    }
-
-    @Test
-    void paginaTareas_cargaCorrectamente() {
-        assertThat(driver.getTitle()).contains("Tareas");
-    }
-
-    @AfterEach
-    void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-    }
-}
-```
-
----
-
-## Ejecutar Pruebas Selenium
-
-Abrir PowerShell en la carpeta del proyecto:
-
-```powershell
-cd C:\Users\Public\Dev\rozo-post2-u10
-```
-
-Ejecutar:
-
-```powershell
-.\mvnw.cmd test -Dtest=TareasE2ETest
-```
-
----
-
-## Resultado Esperado
-
-```text
-BUILD SUCCESS
-Tests run: 2
-Failures: 0
-Errors: 0
-```
-
----
-
-# CHECKPOINT 2 - Postman + Test Scripts
-
----
-
-## Crear Entorno en Postman
-
-### Nombre del entorno
-
-```text
-ToDoApp-Local
-```
-
-### Variable
-
-```text
-baseUrl = http://localhost:8080
-```
-
----
-
-## Colección Postman
-
-### Nombre
-
-```text
-API ToDoApp
-```
-
----
-
-## Requests Implementados
-
-- POST crear tarea
-- GET obtener tarea
-- PATCH completar tarea
-- GET verificar completada
-- GET tarea inexistente (404)
-
----
-
-## Test Script - POST Crear Tarea
-
-```javascript
-pm.test("Status 201 Created", () => {
-  pm.response.to.have.status(201);
-});
-
-pm.test("Respuesta contiene id numerico", () => {
-  const b = pm.response.json();
-
-  pm.expect(b).to.have.property("id");
-
-  pm.collectionVariables.set("tareaId", b.id);
-});
-
-pm.test("Tiempo de respuesta < 500ms", () => {
-  pm.expect(pm.response.responseTime).to.be.below(500);
-});
-```
-
----
-
-## Ejecutar Aplicación Spring Boot
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-Esperar el mensaje:
-
-```text
-Started Application
-```
-
----
-
-## Ejecutar Runner de Postman
-
-1. Abrir la colección **API ToDoApp**.
-2. Hacer clic en **Run Collection**.
-3. Seleccionar el entorno **ToDoApp-Local**.
-4. Ejecutar **Start Run**.
-
----
-
-## Resultado Esperado
-
-```text
-0 failures
-5 requests ejecutados correctamente
-```
-
----
-
-# CHECKPOINT 3 - Newman + GitHub Actions
-
----
-
-## Instalación de Newman
-
-Instalar Node.js 18+ y luego ejecutar:
+Instalar Newman globalmente:
 
 ```powershell
 npm install -g newman
@@ -306,61 +153,322 @@ newman -v
 
 ---
 
-## Ejecutar Newman Localmente
+## Ejecución del Proyecto
 
-Desde la carpeta del proyecto ejecutar:
+### 1. Compilar aplicación
 
 ```powershell
-newman run postman/ColeccionToDo.json --environment postman/env-local.json
+.\mvnw.cmd clean compile
+```
+
+### 2. Ejecutar aplicación
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+La aplicación queda disponible en:
+
+```text
+http://localhost:8080
 ```
 
 ---
 
-## Resultado Esperado
+## Ejecución de pruebas Selenium
 
-```text
-5 requests
-0 failures
+```powershell
+.\mvnw.cmd test
+```
+
+Pruebas implementadas:
+
+- `paginaTareas_cargaCorrectamente`
+- `crearTarea_desdeFormulario_funcionaCorrectamente`
+
+---
+
+## Ejecución de colección Postman
+
+### En Postman Runner
+
+1. Abrir colección `API ToDoApp`
+2. Seleccionar entorno `ToDoApp-Local`
+3. Ejecutar Runner
+4. Verificar `0 failures`
+
+---
+
+## Ejecución con Newman
+
+```powershell
+newman run postman/ColeccionToDo.json `
+  --environment postman/env-local.json
 ```
 
 ---
 
 ## Workflow GitHub Actions
 
-Archivo utilizado:
+Archivo:
 
 ```text
 .github/workflows/api-tests.yml
 ```
 
+Pipeline implementado:
+
+```text
+┌───────────────────────────┐
+│ Push / Pull Request       │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Checkout del repositorio  │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Configuración Java 17     │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Compilar aplicación       │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Ejecutar aplicación       │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Verificar health check    │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Instalar Newman           │
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│ Ejecutar colección API    │
+└───────────────────────────┘
+```
+
 ---
 
-# Instrucciones Generales de Ejecución
+## Colección Postman
+
+### Requests implementados
+
+| Método | Endpoint | Descripción |
+| --- | --- | --- |
+| POST | `/api/tareas` | Crear tarea |
+| GET | `/api/tareas/{id}` | Obtener tarea |
+| PATCH | `/api/tareas/{id}/completar` | Completar tarea |
+| GET | `/api/tareas/{id}` | Verificar tarea completada |
+| GET | `/api/tareas/999` | Validar error 404 |
 
 ---
 
-## 1. Ejecutar Aplicación
+## Test Scripts Postman
+
+### Validación status 201
+
+```javascript
+pm.test("Status 201 Created", () => {
+    pm.response.to.have.status(201);
+});
+```
+
+### Guardar ID generado
+
+```javascript
+pm.test("Respuesta contiene id numérico", () => {
+    const b = pm.response.json();
+
+    pm.expect(b).to.have.property("id");
+
+    pm.collectionVariables.set("tareaId", b.id);
+});
+```
+
+### Tiempo de respuesta
+
+```javascript
+pm.test("Tiempo de respuesta < 500ms", () => {
+    pm.expect(pm.response.responseTime).to.be.below(500);
+});
+```
+
+---
+
+## Checkpoints y Evidencias
+
+### Checkpoint 1 — Selenium y Page Object Model
+
+Se implementaron:
+
+- `TareasPage`
+- `NuevaTareaPage`
+- Tests E2E con Selenium
+- Ejecución headless con ChromeDriver
+
+Comprobación:
 
 ```powershell
-cd C:\Users\Public\Dev\rozo-post2-u10
+.\mvnw.cmd test
+```
 
+Evidencia:
+
+```text
+evidencias/selenium_tests_verde.png
+```
+
+---
+
+### Checkpoint 2 — Colección Postman
+
+Se implementó:
+
+- Colección `API ToDoApp`
+- Entorno local y CI
+- 5 requests encadenados
+- Variables dinámicas
+- Scripts de validación
+
+Comprobación:
+
+```powershell
+newman run postman/ColeccionToDo.json `
+  --environment postman/env-local.json
+```
+
+Evidencia:
+
+```text
+evidencias/postman_runner_0_failures.png
+```
+
+---
+
+### Checkpoint 3 — GitHub Actions + Newman
+
+Se implementó:
+
+- Workflow `api-tests.yml`
+- Ejecución automática CI
+- Integración con Newman
+
+Comprobación:
+
+1. Realizar push al repositorio
+2. Abrir pestaña Actions
+3. Verificar workflow en verde
+
+Evidencia:
+
+```text
+evidencias/github_actions_newman.png
+```
+
+---
+
+## Evidencias del Proyecto
+
+### Selenium tests en verde
+
+```markdown
+![selenium](evidencias/selenium_tests_verde.png)
+```
+
+### Postman Runner sin errores
+
+```markdown
+![postman](evidencias/postman_runner_0_failures.png)
+```
+
+### Workflow GitHub Actions passing
+
+```markdown
+![github-actions](evidencias/github_actions_newman.png)
+```
+
+---
+
+## Estructura del Repositorio
+
+```text
+apellido-post2-u10/
+│
+├── postman/
+│   ├── ColeccionToDo.json
+│   ├── env-local.json
+│   └── env-ci.json
+│
+├── .github/
+│   └── workflows/
+│       └── api-tests.yml
+│
+├── src/
+├── evidencias/
+├── pom.xml
+└── README.md
+```
+
+---
+
+## Repositorio GitHub
+
+```text
+https://github.com/kevinjavierramirez55-tech/ramirez-post2-u10
+```
+
+---
+
+## Buenas prácticas aplicadas
+
+- Uso de Page Object Model.
+- Encapsulamiento de selectores Selenium.
+- Automatización CI con GitHub Actions.
+- Validaciones automáticas en Postman.
+- Ejecución de pruebas automatizadas con Newman.
+- Organización del proyecto por capas y carpetas.
+- Commits descriptivos siguiendo convenciones Git.
+
+---
+
+## Comandos útiles
+
+### Ejecutar tests
+
+```powershell
+.\mvnw.cmd test
+```
+
+### Ejecutar aplicación
+
+```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
----
-
-## 2. Ejecutar Pruebas Selenium
+### Ejecutar Newman
 
 ```powershell
-.\mvnw.cmd test -Dtest=TareasE2ETest
+newman run postman/ColeccionToDo.json `
+  --environment postman/env-local.json
 ```
 
----
-
-## 3. Ejecutar Newman
+### Ejecutar workflow localmente
 
 ```powershell
-newman run postman/ColeccionToDo.json --environment postman/env-local.json
+mvn clean package
+java -jar target/*.jar
 ```
 
 ## Capturas del Proyecto
