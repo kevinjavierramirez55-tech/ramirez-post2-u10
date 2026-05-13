@@ -1,4 +1,4 @@
-name: API Tests con Newman
+name: API Tests
 
 on: [push, pull_request]
 
